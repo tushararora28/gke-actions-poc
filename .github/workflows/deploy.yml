@@ -14,29 +14,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Authenticate to GCP
+      - name: Authenticate To Google Cloud
         uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: projects/687523369801/locations/global/workloadIdentityPools/github-pol/providers/github-provider-v2
           service_account: 687523369801-compute@developer.gserviceaccount.com
+          project_id: tushar-prometheus-live
 
-      - name: Setup GCloud
+      - name: Setup Google Cloud CLI
         uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: tushar-prometheus-live
 
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: cluster-1
           location: europe-west1
+          project_id: tushar-prometheus-live
 
-      - name: Verify Connection
+      - name: Verify Cluster Connection
         run: |
+          kubectl cluster-info
           kubectl get nodes
 
-      - name: Deploy
+      - name: Deploy Nginx
         run: |
           kubectl apply -f deployment.yaml
+
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment/nginx --timeout=120s
+          kubectl get deployments
           kubectl get pods
+          kubectl get services
