@@ -14,21 +14,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - id: auth
-      uses: google-github-actions/auth@v3
-      with:
-        workload_identity_provider: projects/687523369801/locations/global/workloadIdentityPools/github-pol/providers/github-provider-v2
-        service_account: 687523369801-compute@developer.gserviceaccount.com
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/687523369801/locations/global/workloadIdentityPools/github-pol/providers/github-provider-v2
+          service_account: 687523369801-compute@developer.gserviceaccount.com
 
-    - uses: google-github-actions/setup-gcloud@v2
+      - name: Setup GCloud
+        uses: google-github-actions/setup-gcloud@v2
 
-    - run: |
-        gcloud container clusters get-credentials cluster-1 \
-          --region europe-west1 \
-          --project tushar-prometheus-live
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: cluster-1
+          location: europe-west1
 
-    - run: |
-        kubectl apply -f k8s/
+      - name: Verify Connection
+        run: |
+          kubectl get nodes
+
+      - name: Deploy
+        run: |
+          kubectl apply -f deployment.yaml
+          kubectl get pods
